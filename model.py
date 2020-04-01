@@ -50,8 +50,15 @@ class DecoderBlock(nn.Module):
 
         self.block = nn.Sequential(
             ConvRelu(in_channels, middle_channels),
-            nn.ConvTranspose2d(middle_channels, out_channels, kernel_size=3, stride=2, padding=1, output_padding=1),
-            nn.ReLU(inplace=True)
+            nn.ConvTranspose2d(
+                middle_channels,
+                out_channels,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+                output_padding=1,
+            ),
+            nn.ReLU(inplace=True),
         )
 
     def forward(self, x):
@@ -82,11 +89,21 @@ class UNet11(nn.Module):
         self.conv5s = self.encoder[16]
         self.conv5 = self.encoder[18]
 
-        self.center = DecoderBlock(num_filters * 8 * 2, num_filters * 8 * 2, num_filters * 8)
-        self.dec5 = DecoderBlock(num_filters * (16 + 8), num_filters * 8 * 2, num_filters * 8)
-        self.dec4 = DecoderBlock(num_filters * (16 + 8), num_filters * 8 * 2, num_filters * 4)
-        self.dec3 = DecoderBlock(num_filters * (8 + 4), num_filters * 4 * 2, num_filters * 2)
-        self.dec2 = DecoderBlock(num_filters * (4 + 2), num_filters * 2 * 2, num_filters)
+        self.center = DecoderBlock(
+            num_filters * 8 * 2, num_filters * 8 * 2, num_filters * 8
+        )
+        self.dec5 = DecoderBlock(
+            num_filters * (16 + 8), num_filters * 8 * 2, num_filters * 8
+        )
+        self.dec4 = DecoderBlock(
+            num_filters * (16 + 8), num_filters * 8 * 2, num_filters * 4
+        )
+        self.dec3 = DecoderBlock(
+            num_filters * (8 + 4), num_filters * 4 * 2, num_filters * 2
+        )
+        self.dec2 = DecoderBlock(
+            num_filters * (4 + 2), num_filters * 2 * 2, num_filters
+        )
         self.dec1 = ConvRelu(num_filters * (2 + 1), num_filters)
 
         self.final = nn.Conv2d(num_filters, 1, kernel_size=1)
@@ -112,7 +129,9 @@ class UNet11(nn.Module):
 
 
 class UNet16(nn.Module):
-    def __init__(self, num_classes=1, num_filters=32, pretrained=False, is_deconv=False):
+    def __init__(
+        self, num_classes=1, num_filters=32, pretrained=False, is_deconv=False
+    ):
         """
         :param num_classes:
         :param num_filters:
@@ -132,43 +151,57 @@ class UNet16(nn.Module):
 
         self.relu = nn.ReLU(inplace=True)
 
-        self.conv1 = nn.Sequential(self.encoder[0],
-                                   self.relu,
-                                   self.encoder[2],
-                                   self.relu)
+        self.conv1 = nn.Sequential(
+            self.encoder[0], self.relu, self.encoder[2], self.relu
+        )
 
-        self.conv2 = nn.Sequential(self.encoder[5],
-                                   self.relu,
-                                   self.encoder[7],
-                                   self.relu)
+        self.conv2 = nn.Sequential(
+            self.encoder[5], self.relu, self.encoder[7], self.relu
+        )
 
-        self.conv3 = nn.Sequential(self.encoder[10],
-                                   self.relu,
-                                   self.encoder[12],
-                                   self.relu,
-                                   self.encoder[14],
-                                   self.relu)
+        self.conv3 = nn.Sequential(
+            self.encoder[10],
+            self.relu,
+            self.encoder[12],
+            self.relu,
+            self.encoder[14],
+            self.relu,
+        )
 
-        self.conv4 = nn.Sequential(self.encoder[17],
-                                   self.relu,
-                                   self.encoder[19],
-                                   self.relu,
-                                   self.encoder[21],
-                                   self.relu)
+        self.conv4 = nn.Sequential(
+            self.encoder[17],
+            self.relu,
+            self.encoder[19],
+            self.relu,
+            self.encoder[21],
+            self.relu,
+        )
 
-        self.conv5 = nn.Sequential(self.encoder[24],
-                                   self.relu,
-                                   self.encoder[26],
-                                   self.relu,
-                                   self.encoder[28],
-                                   self.relu)
+        self.conv5 = nn.Sequential(
+            self.encoder[24],
+            self.relu,
+            self.encoder[26],
+            self.relu,
+            self.encoder[28],
+            self.relu,
+        )
 
-        self.center = DecoderBlockV2(512, num_filters * 8 * 2, num_filters * 8, is_deconv)
+        self.center = DecoderBlockV2(
+            512, num_filters * 8 * 2, num_filters * 8, is_deconv
+        )
 
-        self.dec5 = DecoderBlockV2(512 + num_filters * 8, num_filters * 8 * 2, num_filters * 8, is_deconv)
-        self.dec4 = DecoderBlockV2(512 + num_filters * 8, num_filters * 8 * 2, num_filters * 8, is_deconv)
-        self.dec3 = DecoderBlockV2(256 + num_filters * 8, num_filters * 4 * 2, num_filters * 2, is_deconv)
-        self.dec2 = DecoderBlockV2(128 + num_filters * 2, num_filters * 2 * 2, num_filters, is_deconv)
+        self.dec5 = DecoderBlockV2(
+            512 + num_filters * 8, num_filters * 8 * 2, num_filters * 8, is_deconv
+        )
+        self.dec4 = DecoderBlockV2(
+            512 + num_filters * 8, num_filters * 8 * 2, num_filters * 8, is_deconv
+        )
+        self.dec3 = DecoderBlockV2(
+            256 + num_filters * 8, num_filters * 4 * 2, num_filters * 2, is_deconv
+        )
+        self.dec2 = DecoderBlockV2(
+            128 + num_filters * 2, num_filters * 2 * 2, num_filters, is_deconv
+        )
         self.dec1 = ConvRelu(64 + num_filters, num_filters)
         self.final = nn.Conv2d(num_filters, num_classes, kernel_size=1)
 
@@ -197,19 +230,18 @@ class UNet16(nn.Module):
 
 
 model_urls = {
-    'vgg11': 'https://download.pytorch.org/models/vgg11-bbd30ac9.pth',
-    'vgg13': 'https://download.pytorch.org/models/vgg13-c768596a.pth',
-    'vgg16': 'https://download.pytorch.org/models/vgg16-397923af.pth',
-    'vgg19': 'https://download.pytorch.org/models/vgg19-dcbb9e9d.pth',
-    'vgg11_bn': 'https://download.pytorch.org/models/vgg11_bn-6002323d.pth',
-    'vgg13_bn': 'https://download.pytorch.org/models/vgg13_bn-abd245e5.pth',
-    'vgg16_bn': 'https://download.pytorch.org/models/vgg16_bn-6c64b313.pth',
-    'vgg19_bn': 'https://download.pytorch.org/models/vgg19_bn-c79401a0.pth',
+    "vgg11": "https://download.pytorch.org/models/vgg11-bbd30ac9.pth",
+    "vgg13": "https://download.pytorch.org/models/vgg13-c768596a.pth",
+    "vgg16": "https://download.pytorch.org/models/vgg16-397923af.pth",
+    "vgg19": "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
+    "vgg11_bn": "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
+    "vgg13_bn": "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
+    "vgg16_bn": "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
+    "vgg19_bn": "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
 }
 
 
 class VGG(nn.Module):
-
     def __init__(self, features, num_classes=1000, init_weights=True):
         super(VGG, self).__init__()
         self.features = features
@@ -236,7 +268,7 @@ class VGG(nn.Module):
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.BatchNorm2d):
@@ -251,7 +283,7 @@ def make_layers(cfg, batch_norm=False, bands=4):
     layers = []
     in_channels = bands
     for v in cfg:
-        if v == 'M':
+        if v == "M":
             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
         else:
             conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
@@ -264,20 +296,60 @@ def make_layers(cfg, batch_norm=False, bands=4):
 
 
 cfgs = {
-    'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
+    "A": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
+    "B": [64, 64, "M", 128, 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
+    "D": [
+        64,
+        64,
+        "M",
+        128,
+        128,
+        "M",
+        256,
+        256,
+        256,
+        "M",
+        512,
+        512,
+        512,
+        "M",
+        512,
+        512,
+        512,
+        "M",
+    ],
+    "E": [
+        64,
+        64,
+        "M",
+        128,
+        128,
+        "M",
+        256,
+        256,
+        256,
+        256,
+        "M",
+        512,
+        512,
+        512,
+        512,
+        "M",
+        512,
+        512,
+        512,
+        512,
+        "M",
+    ],
 }
 
 
 def _vgg(arch, cfg, batch_norm, pretrained, progress, **kwargs):
     if pretrained:
-        kwargs['init_weights'] = False
+        kwargs["init_weights"] = False
     model = VGG(make_layers(cfgs[cfg], batch_norm=batch_norm), **kwargs)
     if pretrained:
-        state_dict = load_state_dict_from_url(model_urls[arch],
-                                              progress=progress)
+        state_dict = load_state_dict_from_url(model_urls[arch], progress=progress)
         model.load_state_dict(state_dict)
     return model
 
@@ -290,7 +362,7 @@ def vgg11(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg11', 'A', False, pretrained, progress, **kwargs)
+    return _vgg("vgg11", "A", False, pretrained, progress, **kwargs)
 
 
 def vgg11_bn(pretrained=False, progress=True, **kwargs):
@@ -301,7 +373,7 @@ def vgg11_bn(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg11_bn', 'A', True, pretrained, progress, **kwargs)
+    return _vgg("vgg11_bn", "A", True, pretrained, progress, **kwargs)
 
 
 def vgg13(pretrained=False, progress=True, **kwargs):
@@ -312,7 +384,7 @@ def vgg13(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg13', 'B', False, pretrained, progress, **kwargs)
+    return _vgg("vgg13", "B", False, pretrained, progress, **kwargs)
 
 
 def vgg13_bn(pretrained=False, progress=True, **kwargs):
@@ -323,7 +395,7 @@ def vgg13_bn(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg13_bn', 'B', True, pretrained, progress, **kwargs)
+    return _vgg("vgg13_bn", "B", True, pretrained, progress, **kwargs)
 
 
 def vgg16(pretrained=False, progress=True, **kwargs):
@@ -334,7 +406,7 @@ def vgg16(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg16', 'D', False, pretrained, progress, **kwargs)
+    return _vgg("vgg16", "D", False, pretrained, progress, **kwargs)
 
 
 def vgg16_bn(pretrained=False, progress=True, **kwargs):
@@ -345,7 +417,7 @@ def vgg16_bn(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg16_bn', 'D', True, pretrained, progress, **kwargs)
+    return _vgg("vgg16_bn", "D", True, pretrained, progress, **kwargs)
 
 
 def vgg19(pretrained=False, progress=True, **kwargs):
@@ -356,7 +428,7 @@ def vgg19(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg19', 'E', False, pretrained, progress, **kwargs)
+    return _vgg("vgg19", "E", False, pretrained, progress, **kwargs)
 
 
 def vgg19_bn(pretrained=False, progress=True, **kwargs):
@@ -367,4 +439,4 @@ def vgg19_bn(pretrained=False, progress=True, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _vgg('vgg19_bn', 'E', True, pretrained, progress, **kwargs)
+    return _vgg("vgg19_bn", "E", True, pretrained, progress, **kwargs)
