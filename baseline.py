@@ -34,9 +34,7 @@ def readrotationfile(path):
     Reads SAR_orientations file, which lists whether each strip was imaged
     from the north (denoted by 0) or from the south (denoted by 1).
     """
-    rotationdf = pd.read_csv(
-        path, sep=" ", index_col=0, names=["strip", "direction"], header=None
-    )
+    rotationdf = pd.read_csv(path, sep=" ", index_col=0, names=["strip", "direction"], header=None)
     rotationdf["direction"] = rotationdf["direction"].astype(int)
     return rotationdf
 
@@ -140,18 +138,13 @@ def pretrain(args):
     sarpaths.sort()
     labelpaths = glob.glob(os.path.join(args.labeldir, "*.geojson"))
     labelpaths.sort()
-    maskpaths = [
-        os.path.join(args.maskdir, os.path.basename(sarpath)) for sarpath in sarpaths
-    ]
-    sarprocpaths = [
-        os.path.join(args.sarprocdir, os.path.basename(sarpath)) for sarpath in sarpaths
-    ]
+    maskpaths = [os.path.join(args.maskdir, os.path.basename(sarpath)) for sarpath in sarpaths]
+    sarprocpaths = [os.path.join(args.sarprocdir, os.path.basename(sarpath)) for sarpath in sarpaths]
     if args.opticaldir is not None:
         opticalpaths = glob.glob(os.path.join(args.opticaldir, "*.tif"))
         opticalpaths.sort()
         opticalprocpaths = [
-            os.path.join(args.opticalprocdir, os.path.basename(opticalpath))
-            for opticalpath in opticalpaths
+            os.path.join(args.opticalprocdir, os.path.basename(opticalpath)) for opticalpath in opticalpaths
         ]
     else:
         opticalpaths = [""] * len(sarpaths)
@@ -179,20 +172,8 @@ def pretrain(args):
     redge = 596250  # Approximate east edge of training data area
     numgroups = 5
     reorganizeoptical = True
-    for (
-        i,
-        (sarpath, opticalpath, labelpath, maskpath, sarprocpath, opticalprocpath),
-    ) in tqdm.tqdm(
-        enumerate(
-            zip(
-                sarpaths,
-                opticalpaths,
-                labelpaths,
-                maskpaths,
-                sarprocpaths,
-                opticalprocpaths,
-            )
-        ),
+    for (i, (sarpath, opticalpath, labelpath, maskpath, sarprocpath, opticalprocpath),) in tqdm.tqdm(
+        enumerate(zip(sarpaths, opticalpaths, labelpaths, maskpaths, sarprocpaths, opticalprocpaths,)),
         total=len(sarpaths),
     ):
         # Generate mask
@@ -200,9 +181,7 @@ def pretrain(args):
         if args.mintrainsize is not None:
             cut = gdf.area > float(args.mintrainsize)
             gdf = gdf.loc[cut]
-        maskdata = sol.vector.mask.footprint_mask(
-            df=gdf, reference_im=sarpath, out_file=maskpath
-        )
+        maskdata = sol.vector.mask.footprint_mask(df=gdf, reference_im=sarpath, out_file=maskpath)
         # Optionally rotate mask
         if args.rotate:
             rotationflag = lookuprotation(sarpath, rotationdf)
@@ -225,17 +204,9 @@ def pretrain(args):
         sarfile = gdal.Open(sarpath)
         sartransform = sarfile.GetGeoTransform()
         sarx = sartransform[0]
-        groupnum = min(
-            numgroups - 1,
-            max(0, math.floor((sarx - ledge) / (redge - ledge) * numgroups)),
-        )
+        groupnum = min(numgroups - 1, max(0, math.floor((sarx - ledge) / (redge - ledge) * numgroups)),)
         combodf = combodf.append(
-            {
-                "sarimage": sarprocpath,
-                "opticalimage": opticalprocpath,
-                "label": maskpath,
-                "group": groupnum,
-            },
+            {"sarimage": sarprocpath, "opticalimage": opticalprocpath, "label": maskpath, "group": groupnum,},
             ignore_index=True,
         )
 
@@ -250,18 +221,10 @@ def pretrain(args):
     validationgroup = numgroups - 1
     traindf = combodf[combodf["group"] != validationgroup]
     validdf = combodf[combodf["group"] == validationgroup]
-    sartraindf = traindf.loc[:, ["sarimage", "label"]].rename(
-        columns={"sarimage": "image"}
-    )
-    sarvaliddf = validdf.loc[:, ["sarimage", "label"]].rename(
-        columns={"sarimage": "image"}
-    )
-    opticaltraindf = traindf.loc[:, ["opticalimage", "label"]].rename(
-        columns={"opticalimage": "image"}
-    )
-    opticalvaliddf = validdf.loc[:, ["opticalimage", "label"]].rename(
-        columns={"opticalimage": "image"}
-    )
+    sartraindf = traindf.loc[:, ["sarimage", "label"]].rename(columns={"sarimage": "image"})
+    sarvaliddf = validdf.loc[:, ["sarimage", "label"]].rename(columns={"sarimage": "image"})
+    opticaltraindf = traindf.loc[:, ["opticalimage", "label"]].rename(columns={"opticalimage": "image"})
+    opticalvaliddf = validdf.loc[:, ["opticalimage", "label"]].rename(columns={"opticalimage": "image"})
     sartraindf.to_csv(args.traincsv, index=False)
     sarvaliddf.to_csv(args.validcsv, index=False)
     opticaltraindf.to_csv(args.opticaltraincsv, index=False)
@@ -529,9 +492,7 @@ def train(args):
 
         # Select best-performing optical imagery model
         if not args.uselastmodel:
-            modelfiles = sorted(
-                glob.glob(os.path.join(args.modeldir, "opticalbest*.model"))
-            )
+            modelfiles = sorted(glob.glob(os.path.join(args.modeldir, "opticalbest*.model")))
             timestamps = [os.path.getmtime(modelfile) for modelfile in modelfiles]
             latestindex = timestamps.index(max(timestamps))
             modelfile = modelfiles[latestindex]
@@ -563,10 +524,7 @@ def pretest(args):
     # Get paths to relevant files
     sarpaths = glob.glob(os.path.join(args.testdir, "*.tif"))
     sarpaths.sort()
-    sarprocpaths = [
-        os.path.join(args.testprocdir, os.path.basename(sarpath))
-        for sarpath in sarpaths
-    ]
+    sarprocpaths = [os.path.join(args.testprocdir, os.path.basename(sarpath)) for sarpath in sarpaths]
 
     # Create empty folder to hold processed test SAR images
     makeemptyfolder(args.testprocdir)
@@ -579,9 +537,7 @@ def pretest(args):
     # Copy SAR test images to local folder, with optional rotation
     # Also create Pandas dataframe of testing data
     testdf = pd.DataFrame(columns=["image"])
-    for i, (sarpath, sarprocpath) in tqdm.tqdm(
-        enumerate(zip(sarpaths, sarprocpaths)), total=len(sarpaths)
-    ):
+    for i, (sarpath, sarprocpath) in tqdm.tqdm(enumerate(zip(sarpaths, sarprocpaths)), total=len(sarpaths)):
         # Copy SAR test imagery, with optional rotation
         if args.rotate:
             rotationflag = lookuprotation(sarpath, rotationdf)
@@ -666,9 +622,7 @@ def test(args):
                     sourcedata[regionlabels == bl + 1] = 0
 
         # Save binary image
-        destdata = driver.Create(
-            destfile, sourcedata.shape[1], sourcedata.shape[0], 1, gdal.GDT_Byte
-        )
+        destdata = driver.Create(destfile, sourcedata.shape[1], sourcedata.shape[0], 1, gdal.GDT_Byte)
         destdata.GetRasterBand(1).WriteArray(sourcedata)
         del destdata
 
@@ -700,12 +654,7 @@ def test(args):
         # Add to the cumulative inference CSV file
         tilename = "_".join(os.path.splitext(filename)[0].split("_")[-4:])
         csvaddition = pd.DataFrame(
-            {
-                "ImageId": tilename,
-                "BuildingId": 0,
-                "PolygonWKT_Pix": vectordata["geometry"],
-                "Confidence": 1,
-            }
+            {"ImageId": tilename, "BuildingId": 0, "PolygonWKT_Pix": vectordata["geometry"], "Confidence": 1,}
         )
         csvaddition["BuildingId"] = range(len(csvaddition))
         if firstfile:
@@ -721,10 +670,7 @@ def evaluation(args):
     """
     Compares infered test data vector labels to ground truth.
     """
-    truthpath = os.path.join(
-        os.path.dirname(args.outputcsv),
-        "SN6_Test_Public_AOI_11_Rotterdam_Buildings.csv",
-    )
+    truthpath = os.path.join(os.path.dirname(args.outputcsv), "SN6_Test_Public_AOI_11_Rotterdam_Buildings.csv",)
     proposalpath = args.outputcsv
     minevalsize = 80
 
@@ -746,91 +692,49 @@ def evaluation(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SpaceNet 6 Baseline Algorithm")
     # Which operations to carry out
-    parser.add_argument(
-        "--pretrain", action="store_true", help="Whether to format training data"
-    )
+    parser.add_argument("--pretrain", action="store_true", help="Whether to format training data")
     parser.add_argument("--train", action="store_true", help="Whether to train model")
-    parser.add_argument(
-        "--pretest", action="store_true", help="Whether to format testing data"
-    )
+    parser.add_argument("--pretest", action="store_true", help="Whether to format testing data")
     parser.add_argument("--test", action="store_true", help="Whether to test model")
-    parser.add_argument(
-        "--eval", action="store_true", help="Whether to evaluate test output"
-    )
+    parser.add_argument("--eval", action="store_true", help="Whether to evaluate test output")
     # Training: Input file paths
     parser.add_argument("--sardir", help="Folder of SAR training imagery files")
     parser.add_argument("--opticaldir", help="Folder of optical imagery files")
     parser.add_argument("--labeldir", help="Folder of building footprint vector files")
     parser.add_argument("--rotationfile", help="File of data acquisition directions")
     # Training: Preprocessed file paths
-    parser.add_argument(
-        "--rotationfilelocal", help="Where to save a copy of directions file"
-    )
+    parser.add_argument("--rotationfilelocal", help="Where to save a copy of directions file")
     parser.add_argument("--maskdir", help="Where to save building footprint masks")
-    parser.add_argument(
-        "--sarprocdir", help="Where to save preprocessed SAR training files"
-    )
-    parser.add_argument(
-        "--opticalprocdir", help="Where to save preprocessed optical image files"
-    )
+    parser.add_argument("--sarprocdir", help="Where to save preprocessed SAR training files")
+    parser.add_argument("--opticalprocdir", help="Where to save preprocessed optical image files")
     # Training and inference: YAML and Reference CSV file paths
-    parser.add_argument(
-        "--traincsv", help="Where to save reference CSV of training data"
-    )
-    parser.add_argument(
-        "--validcsv", help="Where to save reference CSV of validation data"
-    )
-    parser.add_argument(
-        "--opticaltraincsv", help="Where to save CSV of optical training data"
-    )
-    parser.add_argument(
-        "--opticalvalidcsv", help="Where to save CSV of optical validation data"
-    )
+    parser.add_argument("--traincsv", help="Where to save reference CSV of training data")
+    parser.add_argument("--validcsv", help="Where to save reference CSV of validation data")
+    parser.add_argument("--opticaltraincsv", help="Where to save CSV of optical training data")
+    parser.add_argument("--opticalvalidcsv", help="Where to save CSV of optical validation data")
     parser.add_argument("--testcsv", help="Where to save reference CSV of testing data")
     parser.add_argument("--yamlpath", help="Where to save YAML file")
-    parser.add_argument(
-        "--opticalyamlpath", help="Where to save transfer learning YAML file"
-    )
+    parser.add_argument("--opticalyamlpath", help="Where to save transfer learning YAML file")
     # Training and inference: Model weights file path
     parser.add_argument("--modeldir", help="Where to save model weights")
     # Inference (testing) file paths
     parser.add_argument("--testdir", help="Folder of SAR testing imagery files")
-    parser.add_argument(
-        "--testprocdir", help="Where to save preprocessed SAR testing files"
-    )
-    parser.add_argument(
-        "--testoutdir", help="Where to save test continuous segmentation maps"
-    )
-    parser.add_argument(
-        "--testbinarydir", help="Where to save test binary segmentation maps"
-    )
-    parser.add_argument(
-        "--testvectordir", help="Where to save test vector label output"
-    )
-    parser.add_argument(
-        "--outputcsv", help="Where to save labels inferred from test data"
-    )
+    parser.add_argument("--testprocdir", help="Where to save preprocessed SAR testing files")
+    parser.add_argument("--testoutdir", help="Where to save test continuous segmentation maps")
+    parser.add_argument("--testbinarydir", help="Where to save test binary segmentation maps")
+    parser.add_argument("--testvectordir", help="Where to save test vector label output")
+    parser.add_argument("--outputcsv", help="Where to save labels inferred from test data")
     # Algorithm settings
+    parser.add_argument("--rotate", action="store_true", help="Rotate tiles to align imaging direction")
     parser.add_argument(
-        "--rotate", action="store_true", help="Rotate tiles to align imaging direction"
+        "--transferoptical", action="store_true", help="Train model on optical before training on SAR",
     )
-    parser.add_argument(
-        "--transferoptical",
-        action="store_true",
-        help="Train model on optical before training on SAR",
-    )
-    parser.add_argument(
-        "--mintrainsize", help="Minimum building size (m^2) for training"
-    )
+    parser.add_argument("--mintrainsize", help="Minimum building size (m^2) for training")
     parser.add_argument("--mintestsize", help="Minimum size to output during testing")
     parser.add_argument(
-        "--uselastmodel",
-        action="store_true",
-        help="Do not overwrite last model with best model",
+        "--uselastmodel", action="store_true", help="Do not overwrite last model with best model",
     )
-    parser.add_argument(
-        "--earlycutoff", help="Limit tiles used, for debugging purposes"
-    )
+    parser.add_argument("--earlycutoff", help="Limit tiles used, for debugging purposes")
     args = parser.parse_args(sys.argv[1:])
 
     if args.pretrain:
