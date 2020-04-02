@@ -14,3 +14,29 @@ repos:
     - flake8-comprehensions==3.2.2
     - flake8-tidy-imports==4.1.0
     - flake8==3.7.9
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    - id: check-docstring-first
+    - id: check-json
+    - id: check-merge-conflict
+    - id: check-yaml
+    - id: debug-statements
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+    - id: flake8
+    - id: requirements-txt-fixer
+- repo: https://github.com/asottile/pyupgrade
+  rev: v1.13.0
+  hooks:
+  - id: pyupgrade
+    args: ['--py36-plus']
+- repo: https://github.com/pre-commit/pygrep-hooks
+  rev: v1.5.1
+  hooks:
+  - id: python-check-mock-methods
+  - id: python-use-type-annotations
+-   repo: https://github.com/pre-commit/mirrors-isort
+    rev: b08e15c
+    hooks:
+    -   id: isort
