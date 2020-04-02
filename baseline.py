@@ -12,7 +12,6 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import skimage
-import torch
 import tqdm
 import gdal
 
@@ -181,7 +180,6 @@ def pretrain(args):
         if args.mintrainsize is not None:
             cut = gdf.area > float(args.mintrainsize)
             gdf = gdf.loc[cut]
-        maskdata = sol.vector.mask.footprint_mask(df=gdf, reference_im=sarpath, out_file=maskpath)
         # Optionally rotate mask
         if args.rotate:
             rotationflag = lookuprotation(sarpath, rotationdf)
@@ -206,7 +204,7 @@ def pretrain(args):
         sarx = sartransform[0]
         groupnum = min(numgroups - 1, max(0, math.floor((sarx - ledge) / (redge - ledge) * numgroups)),)
         combodf = combodf.append(
-            {"sarimage": sarprocpath, "opticalimage": opticalprocpath, "label": maskpath, "group": groupnum,},
+            {"sarimage": sarprocpath, "opticalimage": opticalprocpath, "label": maskpath, "group": groupnum},
             ignore_index=True,
         )
 
@@ -631,7 +629,7 @@ def test(args):
             rotationflag = lookuprotation(filename, rotationdf)
         else:
             rotationflag = 0
-        rotationflagbool = rotationflag == 1
+
         if rotationflag:
             sourcedatarotated = np.fliplr(np.flipud(sourcedata))
         else:
@@ -640,7 +638,7 @@ def test(args):
         # Save vector file (CSV)
         vectorname = ".".join(filename.split(".")[:-1]) + ".csv"
         vectorfile = os.path.join(args.testvectordir, vectorname)
-        referencefile = os.path.join(args.testprocdir, filename)
+
         vectordata = sol.vector.mask.mask_to_poly_geojson(
             sourcedatarotated,
             output_path=vectorfile,
@@ -654,7 +652,7 @@ def test(args):
         # Add to the cumulative inference CSV file
         tilename = "_".join(os.path.splitext(filename)[0].split("_")[-4:])
         csvaddition = pd.DataFrame(
-            {"ImageId": tilename, "BuildingId": 0, "PolygonWKT_Pix": vectordata["geometry"], "Confidence": 1,}
+            {"ImageId": tilename, "BuildingId": 0, "PolygonWKT_Pix": vectordata["geometry"], "Confidence": 1}
         )
         csvaddition["BuildingId"] = range(len(csvaddition))
         if firstfile:
