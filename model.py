@@ -50,14 +50,7 @@ class DecoderBlock(nn.Module):
 
         self.block = nn.Sequential(
             ConvRelu(in_channels, middle_channels),
-            nn.ConvTranspose2d(
-                middle_channels,
-                out_channels,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-                output_padding=1,
-            ),
+            nn.ConvTranspose2d(middle_channels, out_channels, kernel_size=3, stride=2, padding=1, output_padding=1,),
             nn.ReLU(inplace=True),
         )
 
@@ -89,21 +82,11 @@ class UNet11(nn.Module):
         self.conv5s = self.encoder[16]
         self.conv5 = self.encoder[18]
 
-        self.center = DecoderBlock(
-            num_filters * 8 * 2, num_filters * 8 * 2, num_filters * 8
-        )
-        self.dec5 = DecoderBlock(
-            num_filters * (16 + 8), num_filters * 8 * 2, num_filters * 8
-        )
-        self.dec4 = DecoderBlock(
-            num_filters * (16 + 8), num_filters * 8 * 2, num_filters * 4
-        )
-        self.dec3 = DecoderBlock(
-            num_filters * (8 + 4), num_filters * 4 * 2, num_filters * 2
-        )
-        self.dec2 = DecoderBlock(
-            num_filters * (4 + 2), num_filters * 2 * 2, num_filters
-        )
+        self.center = DecoderBlock(num_filters * 8 * 2, num_filters * 8 * 2, num_filters * 8)
+        self.dec5 = DecoderBlock(num_filters * (16 + 8), num_filters * 8 * 2, num_filters * 8)
+        self.dec4 = DecoderBlock(num_filters * (16 + 8), num_filters * 8 * 2, num_filters * 4)
+        self.dec3 = DecoderBlock(num_filters * (8 + 4), num_filters * 4 * 2, num_filters * 2)
+        self.dec2 = DecoderBlock(num_filters * (4 + 2), num_filters * 2 * 2, num_filters)
         self.dec1 = ConvRelu(num_filters * (2 + 1), num_filters)
 
         self.final = nn.Conv2d(num_filters, 1, kernel_size=1)
@@ -129,9 +112,7 @@ class UNet11(nn.Module):
 
 
 class UNet16(nn.Module):
-    def __init__(
-        self, num_classes=1, num_filters=32, pretrained=False, is_deconv=False
-    ):
+    def __init__(self, num_classes=1, num_filters=32, pretrained=False, is_deconv=False):
         """
         :param num_classes:
         :param num_filters:
@@ -151,57 +132,28 @@ class UNet16(nn.Module):
 
         self.relu = nn.ReLU(inplace=True)
 
-        self.conv1 = nn.Sequential(
-            self.encoder[0], self.relu, self.encoder[2], self.relu
-        )
+        self.conv1 = nn.Sequential(self.encoder[0], self.relu, self.encoder[2], self.relu)
 
-        self.conv2 = nn.Sequential(
-            self.encoder[5], self.relu, self.encoder[7], self.relu
-        )
+        self.conv2 = nn.Sequential(self.encoder[5], self.relu, self.encoder[7], self.relu)
 
         self.conv3 = nn.Sequential(
-            self.encoder[10],
-            self.relu,
-            self.encoder[12],
-            self.relu,
-            self.encoder[14],
-            self.relu,
+            self.encoder[10], self.relu, self.encoder[12], self.relu, self.encoder[14], self.relu,
         )
 
         self.conv4 = nn.Sequential(
-            self.encoder[17],
-            self.relu,
-            self.encoder[19],
-            self.relu,
-            self.encoder[21],
-            self.relu,
+            self.encoder[17], self.relu, self.encoder[19], self.relu, self.encoder[21], self.relu,
         )
 
         self.conv5 = nn.Sequential(
-            self.encoder[24],
-            self.relu,
-            self.encoder[26],
-            self.relu,
-            self.encoder[28],
-            self.relu,
+            self.encoder[24], self.relu, self.encoder[26], self.relu, self.encoder[28], self.relu,
         )
 
-        self.center = DecoderBlockV2(
-            512, num_filters * 8 * 2, num_filters * 8, is_deconv
-        )
+        self.center = DecoderBlockV2(512, num_filters * 8 * 2, num_filters * 8, is_deconv)
 
-        self.dec5 = DecoderBlockV2(
-            512 + num_filters * 8, num_filters * 8 * 2, num_filters * 8, is_deconv
-        )
-        self.dec4 = DecoderBlockV2(
-            512 + num_filters * 8, num_filters * 8 * 2, num_filters * 8, is_deconv
-        )
-        self.dec3 = DecoderBlockV2(
-            256 + num_filters * 8, num_filters * 4 * 2, num_filters * 2, is_deconv
-        )
-        self.dec2 = DecoderBlockV2(
-            128 + num_filters * 2, num_filters * 2 * 2, num_filters, is_deconv
-        )
+        self.dec5 = DecoderBlockV2(512 + num_filters * 8, num_filters * 8 * 2, num_filters * 8, is_deconv)
+        self.dec4 = DecoderBlockV2(512 + num_filters * 8, num_filters * 8 * 2, num_filters * 8, is_deconv)
+        self.dec3 = DecoderBlockV2(256 + num_filters * 8, num_filters * 4 * 2, num_filters * 2, is_deconv)
+        self.dec2 = DecoderBlockV2(128 + num_filters * 2, num_filters * 2 * 2, num_filters, is_deconv)
         self.dec1 = ConvRelu(64 + num_filters, num_filters)
         self.final = nn.Conv2d(num_filters, num_classes, kernel_size=1)
 
@@ -298,49 +250,8 @@ def make_layers(cfg, batch_norm=False, bands=4):
 cfgs = {
     "A": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
     "B": [64, 64, "M", 128, 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
-    "D": [
-        64,
-        64,
-        "M",
-        128,
-        128,
-        "M",
-        256,
-        256,
-        256,
-        "M",
-        512,
-        512,
-        512,
-        "M",
-        512,
-        512,
-        512,
-        "M",
-    ],
-    "E": [
-        64,
-        64,
-        "M",
-        128,
-        128,
-        "M",
-        256,
-        256,
-        256,
-        256,
-        "M",
-        512,
-        512,
-        512,
-        512,
-        "M",
-        512,
-        512,
-        512,
-        512,
-        "M",
-    ],
+    "D": [64, 64, "M", 128, 128, "M", 256, 256, 256, "M", 512, 512, 512, "M", 512, 512, 512, "M",],
+    "E": [64, 64, "M", 128, 128, "M", 256, 256, 256, 256, "M", 512, 512, 512, 512, "M", 512, 512, 512, 512, "M",],
 }
 
 
